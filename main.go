@@ -2,8 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"os"
 )
 
 type ViaCEP struct {
@@ -20,14 +23,22 @@ type ViaCEP struct {
 }
 
 func main() {
-	http.HandleFunc("/", BuscaCepHandler)
-	http.ListenAndServe(":8800", nil)
-}
+	port := os.Getenv("PORT")
 
+	if port == "" {
+		port = "8080"
+	}
+
+	http.HandleFunc("/", BuscaCepHandler)
+
+	log.Println("Listening on port", port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
+
+}
 
 func BuscaCepHandler(w http.ResponseWriter, r *http.Request) {
 
-	if r.URL.Path != "/"{
+	if r.URL.Path != "/" {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -51,7 +62,7 @@ func BuscaCepHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func BuscaCep(cep string) (*ViaCEP, error) {
-	resp, error := http.Get("https://viacep.com.br/ws/"+cep+"/json/")
+	resp, error := http.Get("https://viacep.com.br/ws/" + cep + "/json/")
 	if error != nil {
 		return nil, error
 	}
@@ -66,4 +77,4 @@ func BuscaCep(cep string) (*ViaCEP, error) {
 		return nil, error
 	}
 	return &c, nil
-} 
+}
